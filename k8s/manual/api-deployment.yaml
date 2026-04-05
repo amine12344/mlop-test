@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: api
+ namespace: mlop-test
+spec:
+ replicas: 1
+ selector:
+   matchLabels:
+     app: api
+ template:
+   metadata:
+     labels:
+       app: api
+   spec:
+     containers:
+       - name: api
+         image: mlpo-api:manual
+         imagePullPolicy: IfNotPresent
+         ports:
+           - containerPort: 8080
+         envFrom:
+           - configMapRef:
+               name: api-config
+         env:
+           - name: DB_PASSWORD
+             valueFrom:
+               secretKeyRef:
+                 name: postgres-secret
+                 key: POSTGRES_PASSWORD
+         livenessProbe:
+           httpGet:
+             path: /healthz
+             port: 8080
+         readinessProbe:
+           httpGet:
+             path: /readyz
+             port: 8080

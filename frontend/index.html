@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+ <title>MLOPS Test</title>
+</head>
+<body>
+ <h1>MLOPS Test Lab 1</h1>
+
+ <button onclick="api()">API</button>
+ <button onclick="db()">DB</button>
+
+ <pre id="out">...</pre>
+
+<script>
+async function call(url){
+ const res = await fetch(url);
+ const data = await res.json();
+ document.getElementById("out").textContent =
+   JSON.stringify(data,null,2);
+}
+
+function api(){ call("/api/"); }
+function db(){ call("/api/db"); }
+</script>
+</body>
+</html>
