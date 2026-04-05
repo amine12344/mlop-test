@@ -1,26 +1,47 @@
 const express = require("express");
-const { ClientRequest } = require("http");
-const{ Client } = require("pg")
+const { Client } = require("pg");
+const os = require("os");
+
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.get("/", (req, res) => {
-  res.json({
-    lab: 3,
-    status: "ok",
-    hostname: require("os").hostname(),
-    time: new Date().toISOString()
-  });
-});
-app.get("/db", async (req, res) => {
-  const client = new Client({
-    host: process.env.DB_HOST || "db",
+function dbClient() {
+  return new Client({
+    host: process.env.DB_HOST || "postgres",
     user: process.env.DB_USER || "postgres",
     password: process.env.DB_PASSWORD || "postgres",
     database: process.env.DB_NAME || "postgres",
-    port: 5432,
+    port: Number(process.env.DB_PORT || 5432),
   });
+}
 
+app.get("/", (req, res) => {
+  res.json({
+    app: "mlop-test-api",
+    status: "ok",
+    hostname: os.hostname(),
+    time: new Date().toISOString(),
+  });
+});
+
+app.get("/healthz", (req, res) => {
+  res.status(200).json({ status: "healthy" });
+});
+
+app.get("/readyz", async (req, res) => {
+  const client = dbClient();
+  try {
+    await client.connect();
+    await client.query("SELECT 1");
+    await client.end();
+    res.status(200).json({ status: "ready" });
+  } catch (e) {
+    res.status(500).json({ status: "not-ready", error: e.message });
+  }
+});
+
+app.get("/db", async (req, res) => {
+  const client = dbClient();
   try {
     await client.connect();
     const r = await client.query("SELECT NOW() AS now");
@@ -32,4 +53,3 @@ app.get("/db", async (req, res) => {
 });
 
 app.listen(port, () => console.log(`Listening on ${port}`));
-
