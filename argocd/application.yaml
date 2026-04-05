@@ -6,8 +6,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/YOUR_USER/mlop-test.git
-    targetRevision: main
+    repoURL: https://github.com/amine12344/mlop-test.git
+    targetRevision: feature/kind-kube
     path: helm/mlop-test
     helm:
       valueFiles:
