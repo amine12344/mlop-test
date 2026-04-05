@@ -1,15 +1,51 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MLOP Test Lab</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>MLOP Test Lab</h1>
-  <button onclick="callApi()">API status</button>
-  <button onclick="callDb()">DB check</button>
-  <pre id="out">Ready</pre>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-2xl">
+
+    <!-- Header -->
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">
+      🚀 MLOP Test Lab
+    </h1>
+
+    <p class="text-gray-500 mb-6">
+      Kubernetes • Helm • Argo CD Demo App
+    </p>
+
+    <!-- Buttons -->
+    <div class="flex gap-4 mb-6">
+      <button onclick="callApi()"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow">
+        API Status
+      </button>
+
+      <button onclick="callDb()"
+        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow">
+        DB Check
+      </button>
+    </div>
+
+    <!-- Status Card -->
+    <div class="bg-gray-900 text-green-400 rounded-lg p-4 font-mono text-sm h-64 overflow-auto">
+      <pre id="output">Click a button to test...</pre>
+    </div>
+    <span id="statusBadge" class="ml-2 text-xs px-2 py-1 rounded bg-gray-300">
+        Unknown
+    </span>
+  </div>
+  <div class="mb-4 text-sm text-gray-400">
+  Environment: <span class="font-bold text-blue-600">DEV</span>
+  </div>
   <script src="/app.js"></script>
 </body>
 </html>
