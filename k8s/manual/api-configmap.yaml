@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: api-config
+ namespace: mlop-test
+data:
+ DB_HOST: postgres
+ DB_USER: postgres
+ DB_NAME: postgres
+ DB_PORT: "5432"
