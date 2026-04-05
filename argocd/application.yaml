@@ -9,9 +9,6 @@ spec:
     repoURL: https://github.com/amine12344/mlop-test.git
     targetRevision: feature/kind-kube
     path: helm/mlop-test
-    helm:
-      valueFiles:
-        - values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: mlop-test
@@ -21,3 +18,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - group: networking.k8s.io
+      kind: Ingress
+      jsonPointers:
+        - /status
