@@ -4,48 +4,126 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MLOP Test Lab</title>
-
-  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <div class="relative isolate overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.16),transparent_28%)]"></div>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <main class="relative mx-auto max-w-7xl px-6 py-10 lg:px-8">
+      <header class="mb-10">
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/80 px-3 py-1 text-xs font-medium text-sky-300">
+              <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+              Local Kubernetes Demo
+            </div>
+            <h1 class="text-4xl font-bold tracking-tight text-white md:text-5xl">
+              MLOP Test Lab
+            </h1>
+            <p class="mt-3 max-w-2xl text-base text-slate-300 md:text-lg">
+              A clean demo frontend for your Kubernetes, Helm, GHCR, and Argo CD workshop.
+            </p>
+          </div>
 
-  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-2xl">
+          <div class="grid grid-cols-2 gap-3 md:min-w-[320px]">
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+              <p class="text-xs uppercase tracking-wide text-slate-400">Environment</p>
+              <p id="environmentLabel" class="mt-1 text-lg font-semibold text-sky-300">DEV</p>
+            </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+              <p class="text-xs uppercase tracking-wide text-slate-400">Status</p>
+              <div class="mt-2">
+                <span id="statusBadge" class="inline-flex items-center rounded-full bg-slate-700 px-3 py-1 text-sm font-medium text-slate-200">
+                  Unknown
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
 
-    <!-- Header -->
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">
-      🚀 MLOP Test Lab
-    </h1>
+      <section class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <div class="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-slate-950/40">
+          <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-white">Application checks</h2>
+              <p class="mt-1 text-sm text-slate-400">
+                Test the API and database connectivity through the frontend proxy.
+              </p>
+            </div>
 
-    <p class="text-gray-500 mb-6">
-      Kubernetes • Helm • Argo CD Demo App
-    </p>
+            <div class="flex flex-wrap gap-3">
+              <button
+                id="apiBtn"
+                onclick="callApi()"
+                class="inline-flex items-center justify-center rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-300"
+              >
+                Check API
+              </button>
+              <button
+                id="dbBtn"
+                onclick="callDb()"
+                class="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              >
+                Check Database
+              </button>
+              <button
+                id="clearBtn"
+                onclick="clearOutput()"
+                class="inline-flex items-center justify-center rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
 
-    <!-- Buttons -->
-    <div class="flex gap-4 mb-6">
-      <button onclick="callApi()"
-        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow">
-        API Status
-      </button>
+          <div class="mt-6 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
+            <div class="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+              <div class="flex items-center gap-2">
+                <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+                <span class="h-3 w-3 rounded-full bg-amber-400"></span>
+                <span class="h-3 w-3 rounded-full bg-emerald-400"></span>
+              </div>
+              <p class="text-xs uppercase tracking-wide text-slate-500">Response output</p>
+            </div>
+            <pre id="output" class="min-h-[320px] overflow-auto p-5 text-sm leading-6 text-emerald-300">Click “Check API” or “Check Database” to begin.</pre>
+          </div>
+        </div>
 
-      <button onclick="callDb()"
-        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow">
-        DB Check
-      </button>
-    </div>
+        <aside class="space-y-6">
+          <div class="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+            <h3 class="text-lg font-semibold text-white">What this page demonstrates</h3>
+            <ul class="mt-4 space-y-3 text-sm text-slate-300">
+              <li class="rounded-xl bg-slate-800/70 p-3">Frontend served by NGINX</li>
+              <li class="rounded-xl bg-slate-800/70 p-3">API calls routed through <code class="text-sky-300">/api/</code></li>
+              <li class="rounded-xl bg-slate-800/70 p-3">Database connectivity tested with one click</li>
+              <li class="rounded-xl bg-slate-800/70 p-3">Perfect for Helm and Argo CD visual demos</li>
+            </ul>
+          </div>
 
-    <!-- Status Card -->
-    <div class="bg-gray-900 text-green-400 rounded-lg p-4 font-mono text-sm h-64 overflow-auto">
-      <pre id="output">Click a button to test...</pre>
-    </div>
-    <span id="statusBadge" class="ml-2 text-xs px-2 py-1 rounded bg-gray-300">
-        Unknown
-    </span>
+          <div class="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+            <h3 class="text-lg font-semibold text-white">Useful endpoints</h3>
+            <div class="mt-4 space-y-3 text-sm text-slate-300">
+              <div class="rounded-xl bg-slate-800/70 p-3">
+                <p class="font-medium text-white">API root</p>
+                <code class="mt-1 block text-sky-300">/api/</code>
+              </div>
+              <div class="rounded-xl bg-slate-800/70 p-3">
+                <p class="font-medium text-white">Database check</p>
+                <code class="mt-1 block text-emerald-300">/api/db</code>
+              </div>
+              <div class="rounded-xl bg-slate-800/70 p-3">
+                <p class="font-medium text-white">Readiness</p>
+                <code class="mt-1 block text-amber-300">/api/readyz</code>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
   </div>
-  <div class="mb-4 text-sm text-gray-400">
-  Environment: <span class="font-bold text-blue-600">DEV</span>
-  </div>
+
   <script src="/app.js"></script>
 </body>
 </html>
