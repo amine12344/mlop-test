@@ -3,8 +3,8 @@ namespace: mlop-test-helm
 api:
   replicaCount: 1
   image:
-    repository: mlop-api
-    tag: manualV0
+    repository: ghcr.io/${{ github.repository_owner }}/mlop-api
+    tag: latest
     pullPolicy: IfNotPresent
   port: 8080
   env:
@@ -16,8 +16,8 @@ api:
 frontend:
   replicaCount: 1
   image:
-    repository: mlop-frontend
-    tag: manualV0.1
+    repository: ghcr.io/${{ github.repository_owner }}/mlop-frontend
+    tag: latest
     pullPolicy: IfNotPresent
   port: 80
 
