@@ -1,0 +1,39 @@
+namespace: mlop-test-helm
+
+api:
+  replicaCount: 1
+  image:
+    repository: mlop-api
+    tag: manualV0
+    pullPolicy: IfNotPresent
+  port: 8080
+  env:
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_NAME: postgres
+    DB_USER: postgres
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: mlop-frontend
+    tag: manualV0.1
+    pullPolicy: IfNotPresent
+  port: 80
+
+postgres:
+  replicaCount: 1
+  image:
+    repository: postgres
+    tag: 16-alpine
+    pullPolicy: IfNotPresent
+  port: 5432
+  auth:
+    user: postgres
+    password: postgres
+    database: postgres
+
+ingress:
+  enabled: true
+  className: nginx
+  host: mlop.local
