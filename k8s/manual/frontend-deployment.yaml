@@ -15,7 +15,7 @@ spec:
    spec:
      containers:
        - name: frontend
-         image: mlop-frontend:manual
+         image: mlop-frontend:manualV0
          imagePullPolicy: IfNotPresent
          ports:
            - containerPort: 80
