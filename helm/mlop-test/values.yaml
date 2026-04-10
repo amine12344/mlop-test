@@ -3,8 +3,8 @@ namespace: mlop-test-helm
 api:
   replicaCount: 1
   image:
-    repository: mlop-api
-    tag: manualV0
+    repository: ghcr.io/amine12344/mlop-api
+    tag: sha-03b1b05
     pullPolicy: IfNotPresent
   port: 8080
   env:
@@ -16,8 +16,8 @@ api:
 frontend:
   replicaCount: 1
   image:
-    repository: mlop-frontend
-    tag: manualV0.1
+    repository: ghcr.io/amine12344/mlop-frontend
+    tag: sha-03b1b05
     pullPolicy: IfNotPresent
   port: 80
 
