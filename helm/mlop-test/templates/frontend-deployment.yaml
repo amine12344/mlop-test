@@ -13,9 +13,39 @@ spec:
       labels:
         app: frontend
     spec:
+      initContainers:
+        - name: write-version
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              cp /src/index.html /work/index.html
+              sed -i "s/window.__FRONTEND_VERSION__ = \"v1.0.0\"/window.__FRONTEND_VERSION__ = \"${FRONTEND_VERSION}\"/" /work/index.html
+          env:
+            - name: FRONTEND_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: frontend-config
+                  key: FRONTEND_VERSION
+          volumeMounts:
+            - name: source-html
+              mountPath: /src
+            - name: work-html
+              mountPath: /work
       containers:
         - name: frontend
           image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.frontend.port }}
+          volumeMounts:
+            - name: work-html
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+      volumes:
+        - name: source-html
+          configMap:
+            name: frontend-html
+        - name: work-html
+          emptyDir: {}

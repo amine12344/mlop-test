@@ -1,28 +1,6 @@
-namespace: mlop-test-helm
-
-api:
-  replicaCount: 1
-  image:
-    repository: ghcr.io/amine12344/mlop-api
-    tag: sha-03b1b05
-    pullPolicy: IfNotPresent
-  port: 8080
-  env:
-    DB_HOST: postgres
-    DB_PORT: "5432"
-    DB_NAME: postgres
-    DB_USER: postgres
-
-frontend:
-  replicaCount: 1
-  image:
-    repository: ghcr.io/amine12344/mlop-frontend
-    tag: sha-03b1b05
-    pullPolicy: IfNotPresent
-  port: 80
+namespace: mlop-test
 
 postgres:
-  replicaCount: 1
   image:
     repository: postgres
     tag: 16-alpine
@@ -32,6 +10,30 @@ postgres:
     user: postgres
     password: postgres
     database: postgres
+
+api:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/amine12344/mlop-test-api
+    tag: v1.0.0
+    pullPolicy: Always
+  port: 8080
+  env:
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_NAME: postgres
+    DB_USER: postgres
+    APP_VERSION: "v1.0.0"
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/amine12344/mlop-test-frontend
+    tag: v1.0.0
+    pullPolicy: Always
+  port: 80
+  env:
+    FRONTEND_VERSION: "v1.0.0"
 
 ingress:
   enabled: true

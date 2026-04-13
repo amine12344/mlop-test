@@ -1,111 +1,88 @@
-const output = document.getElementById("output");
-const statusBadge = document.getElementById("statusBadge");
-const apiBtn = document.getElementById("apiBtn");
-const dbBtn = document.getElementById("dbBtn");
-
-function setLoading(button) {
-  if (button) {
-    button.disabled = true;
-    button.dataset.originalText = button.textContent;
-    button.textContent = "Loading...";
-    button.classList.add("opacity-70", "cursor-not-allowed");
-  }
+function el(id) {
+  return document.getElementById(id);
 }
 
-function clearLoading(button) {
-  if (button) {
-    button.disabled = false;
-    if (button.dataset.originalText) {
-      button.textContent = button.dataset.originalText;
-    }
-    button.classList.remove("opacity-70", "cursor-not-allowed");
-  }
+function setStatus(text, colorClass = "bg-slate-700") {
+  const node = el("status");
+  if (!node) return;
+  node.textContent = text;
+  node.className = `rounded-full px-3 py-1 text-sm font-semibold ${colorClass}`;
 }
 
-function updateStatus(type, label) {
-  const styles = {
-    neutral: "inline-flex items-center rounded-full bg-slate-700 px-3 py-1 text-sm font-medium text-slate-200",
-    success: "inline-flex items-center rounded-full bg-emerald-500/20 px-3 py-1 text-sm font-medium text-emerald-300 ring-1 ring-inset ring-emerald-500/30",
-    error: "inline-flex items-center rounded-full bg-rose-500/20 px-3 py-1 text-sm font-medium text-rose-300 ring-1 ring-inset ring-rose-500/30",
-    warning: "inline-flex items-center rounded-full bg-amber-500/20 px-3 py-1 text-sm font-medium text-amber-300 ring-1 ring-inset ring-amber-500/30"
-  };
-
-  statusBadge.className = styles[type] || styles.neutral;
-  statusBadge.textContent = label;
+function setOutput(text) {
+  const node = el("output");
+  if (!node) return;
+  node.textContent = text;
 }
 
-function renderJson(title, data) {
-  output.textContent = `${title}\n\n${JSON.stringify(data, null, 2)}`;
+function setText(id, value) {
+  const node = el(id);
+  if (!node) return;
+  node.textContent = value;
 }
 
-function renderError(title, error) {
-  output.textContent = `${title}\n\n${error}`;
+async function fetchJson(url) {
+  const res = await fetch(url, {
+    headers: { Accept: "application/json" }
+  });
+  const data = await res.json();
+  return { res, data };
 }
 
-async function requestJson(url, button, successLabel) {
-  setLoading(button);
-  output.textContent = "Loading...";
-
+async function requestJson(url, successLabel) {
+  setOutput("Loading...");
   try {
-    const response = await fetch(url, {
-      headers: {
-        Accept: "application/json"
-      }
-    });
-
-    let data;
-    const contentType = response.headers.get("content-type") || "";
-
-    if (contentType.includes("application/json")) {
-      data = await response.json();
+    const { res, data } = await fetchJson(url);
+    setOutput(JSON.stringify(data, null, 2));
+    if (res.ok) {
+      setStatus(successLabel, "bg-emerald-600");
     } else {
-      const text = await response.text();
-      throw new Error(`Expected JSON but received: ${text.slice(0, 200)}`);
+      setStatus("Error", "bg-rose-600");
     }
-
-    renderJson(`GET ${url}`, data);
-
-    if (!response.ok) {
-      updateStatus("error", "Error");
-      return;
-    }
-
-    updateStatus("success", successLabel);
-  } catch (error) {
-    updateStatus("error", "Request failed");
-    renderError(`GET ${url}`, error.message);
-  } finally {
-    clearLoading(button);
+  } catch (err) {
+    setOutput(err.message);
+    setStatus("Failed", "bg-rose-600");
   }
 }
 
 function callApi() {
-  requestJson("/api/", apiBtn, "API OK");
+  requestJson("/api/", "API OK");
 }
 
 function callDb() {
-  requestJson("/api/db", dbBtn, "DB OK");
+  requestJson("/api/db", "DB OK");
 }
 
 function clearOutput() {
-  output.textContent = 'Click “Check API” or “Check Database” to begin.';
-  updateStatus("neutral", "Unknown");
+  setOutput("Click a button...");
+  setStatus("Unknown", "bg-slate-700");
 }
 
-async function warmup() {
+async function loadStatus() {
   try {
-    const response = await fetch("/api/readyz", {
-      headers: { Accept: "application/json" }
-    });
+    const [root, ready, db] = await Promise.all([
+      fetchJson("/api/"),
+      fetchJson("/api/readyz"),
+      fetchJson("/api/db")
+    ]);
 
-    if (response.ok) {
-      updateStatus("success", "Ready");
-    } else {
-      updateStatus("warning", "Starting");
-    }
-  } catch {
-    updateStatus("warning", "Unavailable");
+    setText("frontendVersion", window.__FRONTEND_VERSION__ || "unknown");
+    setText("apiVersion", root.data.version || "unknown");
+    setText("apiReady", ready.res.ok ? "ready" : "not-ready");
+    setText("dbStatus", db.res.ok ? "ok" : "error");
+    setText("lastChecked", new Date().toLocaleString());
+
+    setStatus(ready.res.ok ? "Ready" : "Starting", ready.res.ok ? "bg-emerald-600" : "bg-amber-500");
+    setOutput(JSON.stringify({
+      api: root.data,
+      ready: ready.data,
+      db: db.data
+    }, null, 2));
+  } catch (err) {
+    setStatus("Unavailable", "bg-rose-600");
+    setOutput(err.message);
+    setText("lastChecked", new Date().toLocaleString());
   }
 }
 
-document.addEventListener("DOMContentLoaded", warmup);
+document.addEventListener("DOMContentLoaded", loadStatus);
