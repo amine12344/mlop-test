@@ -2,5 +2,5 @@ apiVersion: v2
 name: mlop-test
 description: Full stack demo app with frontend, api, and postgres
 type: application
-version: 0.1.0
-appVersion: "1.0.0"
+version: v1.1.0
+appVersion: "v1.1.0"

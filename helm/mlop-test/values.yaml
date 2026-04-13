@@ -1,10 +1,9 @@
 namespace: mlop-test-helm
-
 api:
   replicaCount: 1
   image:
-    repository: ghcr.io/amine12344/mlop-api
-    tag: sha-03b1b05
+    repository: ghcr.io/amine12344/mlop-test-api
+    tag: v1.1.0
     pullPolicy: IfNotPresent
   port: 8080
   env:
@@ -12,15 +11,16 @@ api:
     DB_PORT: "5432"
     DB_NAME: postgres
     DB_USER: postgres
-
+    APP_VERSION: v1.1.0
 frontend:
   replicaCount: 1
   image:
-    repository: ghcr.io/amine12344/mlop-frontend
-    tag: sha-03b1b05
+    repository: ghcr.io/amine12344/mlop-test-frontend
+    tag: v1.1.0
     pullPolicy: IfNotPresent
   port: 80
-
+  env:
+    FRONTEND_VERSION: v1.1.0
 postgres:
   replicaCount: 1
   image:
@@ -32,7 +32,6 @@ postgres:
     user: postgres
     password: postgres
     database: postgres
-
 ingress:
   enabled: true
   className: nginx
