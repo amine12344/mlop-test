@@ -1,3 +1,5 @@
+name: Auto Release + Update Helm
+
 on:
   push:
     tags:
@@ -7,82 +9,74 @@ permissions:
   contents: write
   packages: write
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: mlop-test-api
+  IMAGE_FRONTEND: mlop-test-frontend
+  BRANCH: feature/test-argo
+
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Validate API image
-        run: docker build -t local-api-test ./app
-
-      - name: Validate frontend image
-        run: docker build -t local-frontend-test ./frontend
-
-      - name: Install Helm
-        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
-      - name: Validate chart
-        run: |
-          helm lint helm/mlop-test
-          helm template mlop-test helm/mlop-test -n mlop-test >/dev/null
 
   build-and-push:
     runs-on: ubuntu-latest
-    needs: validate
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Log in to GHCR
+      - name: Extract version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push API
+      # API
+      - name: Build & push API
         uses: docker/build-push-action@v6
         with:
           context: ./app
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/mlop-test-api:${{ github.ref_name }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/mlop-test-api:${{ env.VERSION }}
 
-      - name: Build and push frontend
+      # FRONTEND
+      - name: Build & push frontend
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/mlop-test-frontend:${{ github.ref_name }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/mlop-test-frontend:${{ env.VERSION }}
 
-  update-chart:
+  update-helm:
     runs-on: ubuntu-latest
     needs: build-and-push
+
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: feature/test-argo
+
+      - name: Extract version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Install yq
         run: sudo snap install yq
 
-      - name: Update Helm versions
-        env:
-          VERSION: ${{ github.ref_name }}
-          OWNER: ${{ github.repository_owner }}
+      - name: Update Helm values
         run: |
-          yq -i '.api.image.repository = "ghcr.io/" + strenv(OWNER) + "/mlop-test-api"' helm/mlop-test/values.yaml
-          yq -i '.frontend.image.repository = "ghcr.io/" + strenv(OWNER) + "/mlop-test-frontend"' helm/mlop-test/values.yaml
           yq -i '.api.image.tag = strenv(VERSION)' helm/mlop-test/values.yaml
           yq -i '.frontend.image.tag = strenv(VERSION)' helm/mlop-test/values.yaml
           yq -i '.api.env.APP_VERSION = strenv(VERSION)' helm/mlop-test/values.yaml
           yq -i '.frontend.env.FRONTEND_VERSION = strenv(VERSION)' helm/mlop-test/values.yaml
-          yq -i '.appVersion = strenv(VERSION)' helm/mlop-test/Chart.yaml
-          yq -i '.version = strenv(VERSION)' helm/mlop-test/Chart.yaml
 
-      - name: Commit chart update
+      - name: Commit changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add helm/mlop-test/values.yaml helm/mlop-test/Chart.yaml
-          git commit -m "release: ${GITHUB_REF_NAME}" || exit 0
-          git push origin main
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add helm/mlop-test/values.yaml
+          git commit -m "release: $VERSION" || exit 0
+          git push origin feature/test-argo
