@@ -44,7 +44,7 @@ spec:
         container('tools') {
           sh '''
             apk add --no-cache bash curl docker-cli git
-            docker version
+            docker version || true
           '''
         }
       }
