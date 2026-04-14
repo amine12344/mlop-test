@@ -26,9 +26,9 @@ spec:
 
   environment {
     REGISTRY = 'ghcr.io'
-    OWNER = 'YOUR_GITHUB_USERNAME'
-    API_IMAGE = 'ghcr.io/YOUR_GITHUB_USERNAME/mlop-test-api'
-    FRONTEND_IMAGE = 'ghcr.io/YOUR_GITHUB_USERNAME/mlop-test-frontend'
+    OWNER = 'amine12344'
+    API_IMAGE = 'ghcr.io/amine12344/mlop-test-api'
+    FRONTEND_IMAGE = 'ghcr.io/amine12344/mlop-test-frontend'
     VERSION = "v1.0.${BUILD_NUMBER}"
   }
 
