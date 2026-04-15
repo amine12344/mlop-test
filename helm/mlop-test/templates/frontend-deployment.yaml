@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
-  namespace: {{ .Values.namespaceOverride | default .Release.Namespace }}
+  namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.frontend.replicaCount }}
   selector:
@@ -13,14 +13,39 @@ spec:
       labels:
         app: frontend
     spec:
+      initContainers:
+        - name: write-version
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              cp /src/index.html /work/index.html
+              sed -i "s/window.__FRONTEND_VERSION__ = \"v1.0.0\"/window.__FRONTEND_VERSION__ = \"${FRONTEND_VERSION}\"/" /work/index.html
+          env:
+            - name: FRONTEND_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: frontend-config
+                  key: FRONTEND_VERSION
+          volumeMounts:
+            - name: source-html
+              mountPath: /src
+            - name: work-html
+              mountPath: /work
       containers:
         - name: frontend
           image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.frontend.containerPort }}
-          env:
-            - name: FRONTEND_VERSION
-              value: {{ .Values.frontend.env.FRONTEND_VERSION | quote }}
-            - name: API_BASE_URL
-              value: {{ .Values.frontend.env.API_BASE_URL | quote }}
+          volumeMounts:
+            - name: work-html
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+      volumes:
+        - name: source-html
+          configMap:
+            name: frontend-html
+        - name: work-html
+          emptyDir: {}

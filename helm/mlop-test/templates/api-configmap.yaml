@@ -4,8 +4,9 @@ metadata:
   name: api-config
   namespace: {{ .Values.namespace }}
 data:
-  PORT: {{ .Values.api.port | quote }}
+  PORT: {{ .Values.api.env.PORT | quote }}
   DB_HOST: {{ .Values.api.env.DB_HOST | quote }}
   DB_PORT: {{ .Values.api.env.DB_PORT | quote }}
   DB_NAME: {{ .Values.api.env.DB_NAME | quote }}
   DB_USER: {{ .Values.api.env.DB_USER | quote }}
+  APP_VERSION: {{ .Values.api.env.APP_VERSION | quote }}

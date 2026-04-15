@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
-  namespace: {{ .Values.namespaceOverride | default .Release.Namespace }}
+  namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.postgres.replicaCount }}
   selector:
@@ -20,9 +20,18 @@ spec:
           ports:
             - containerPort: {{ .Values.postgres.containerPort }}
           env:
-            - name: POSTGRES_DB
-              value: {{ .Values.postgres.auth.database | quote }}
             - name: POSTGRES_USER
-              value: {{ .Values.postgres.auth.username | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
-              value: {{ .Values.postgres.auth.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB
