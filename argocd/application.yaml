@@ -5,23 +5,26 @@ metadata:
   namespace: argocd
 spec:
   project: default
+
   source:
     repoURL: https://github.com/amine12344/mlop-test.git
-    targetRevision: main
+    targetRevision: feature/test-argo
     path: helm/mlop-test
+
   destination:
     server: https://kubernetes.default.svc
     namespace: mlop-test
+
   syncPolicy:
     automated:
-      enabled: true
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
       - RespectIgnoreDifferences=true
+
   ignoreDifferences:
     - group: networking.k8s.io
       kind: Ingress
       jsonPointers:
-        - /status
+        - /status/loadBalancer

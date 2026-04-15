@@ -1,30 +1,44 @@
-name: Auto Release + Update Helm
+name: Branch GitOps CI/CD
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - feature/test-argo
+  workflow_dispatch:
 
 permissions:
   contents: write
   packages: write
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_API: mlop-test-api
-  IMAGE_FRONTEND: mlop-test-frontend
-  BRANCH: feature/test-argo
-
 jobs:
-
-  build-and-push:
+  build-update-gitops:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+    env:
+      API_IMAGE: ghcr.io/${{ github.repository_owner }}/mlop-test-api
+      FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/mlop-test-frontend
+      VERSION: sha-${{ github.sha }}
 
-      - name: Extract version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Validate Docker builds
+        run: |
+          docker build -t local-api:${VERSION} ./app
+          docker build -t local-frontend:${VERSION} ./frontend
+
+      - name: Validate Helm chart
+        run: |
+          helm lint helm/mlop-test
+          helm template mlop-test helm/mlop-test -n mlop-test >/tmp/rendered.yaml
+          test -s /tmp/rendered.yaml
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -33,50 +47,42 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # API
-      - name: Build & push API
+      - name: Build and push API
         uses: docker/build-push-action@v6
         with:
           context: ./app
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/mlop-test-api:${{ env.VERSION }}
+            ${{ env.API_IMAGE }}:${{ env.VERSION }}
+            ${{ env.API_IMAGE }}:latest
 
-      # FRONTEND
-      - name: Build & push frontend
+      - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/mlop-test-frontend:${{ env.VERSION }}
-
-  update-helm:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: feature/test-argo
-
-      - name: Extract version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+            ${{ env.FRONTEND_IMAGE }}:${{ env.VERSION }}
+            ${{ env.FRONTEND_IMAGE }}:latest
 
       - name: Install yq
-        run: sudo snap install yq
+        run: sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && sudo chmod +x /usr/local/bin/yq
 
       - name: Update Helm values
         run: |
+          yq -i '.api.image.repository = strenv(API_IMAGE)' helm/mlop-test/values.yaml
           yq -i '.api.image.tag = strenv(VERSION)' helm/mlop-test/values.yaml
-          yq -i '.frontend.image.tag = strenv(VERSION)' helm/mlop-test/values.yaml
           yq -i '.api.env.APP_VERSION = strenv(VERSION)' helm/mlop-test/values.yaml
+
+          yq -i '.frontend.image.repository = strenv(FRONTEND_IMAGE)' helm/mlop-test/values.yaml
+          yq -i '.frontend.image.tag = strenv(VERSION)' helm/mlop-test/values.yaml
           yq -i '.frontend.env.FRONTEND_VERSION = strenv(VERSION)' helm/mlop-test/values.yaml
 
-      - name: Commit changes
+      - name: Commit updated Helm values
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add helm/mlop-test/values.yaml
-          git commit -m "release: $VERSION" || exit 0
-          git push origin feature/test-argo
+          git diff --cached --quiet && exit 0
+          git commit -m "gitops: deploy ${VERSION} [skip ci]"
+          git push origin HEAD:feature/test-argo
