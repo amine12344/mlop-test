@@ -4,7 +4,7 @@ api:
   replicaCount: 1
   image:
     repository: ghcr.io/amine12344/mlop-test-api
-    tag: "sha-02d8326b3199a383de718a7ac0931d7c29d0cf5f"
+    tag: "sha-a5a10f65595c2bf9ef1b1a75f1eaa4e5d8d4dc8a"
     pullPolicy: IfNotPresent
   service:
     port: 8080
@@ -15,7 +15,7 @@ api:
     DB_NAME: mlop
     DB_USER: mlop
     DB_PASSWORD: mlop
-    APP_VERSION: "sha-02d8326b3199a383de718a7ac0931d7c29d0cf5f"
+    APP_VERSION: "sha-a5a10f65595c2bf9ef1b1a75f1eaa4e5d8d4dc8a"
   probes:
     livenessPath: /healthz
     readinessPath: /readyz
@@ -23,12 +23,12 @@ frontend:
   replicaCount: 1
   image:
     repository: ghcr.io/amine12344/mlop-test-frontend
-    tag: "sha-02d8326b3199a383de718a7ac0931d7c29d0cf5f"
+    tag: "sha-a5a10f65595c2bf9ef1b1a75f1eaa4e5d8d4dc8a"
     pullPolicy: IfNotPresent
   service:
     port: 80
   env:
-    FRONTEND_VERSION: "sha-02d8326b3199a383de718a7ac0931d7c29d0cf5f"
+    FRONTEND_VERSION: "sha-a5a10f65595c2bf9ef1b1a75f1eaa4e5d8d4dc8a"
 postgres:
   replicaCount: 1
   image:
