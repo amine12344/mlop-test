@@ -41,11 +41,19 @@ spec:
       steps {
         container('tools') {
           sh '''
-            apk add --no-cache bash curl docker-cli git wget
-            wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+            set -eux
+
+            apk add --no-cache bash curl docker-cli git wget openssl
+
+            wget -qO /usr/local/bin/yq \
+              https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
             chmod +x /usr/local/bin/yq
-            curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sh
+
+            export VERIFY_CHECKSUM=false
+            curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
             docker version || true
+            git --version
             helm version
             yq --version
           '''
