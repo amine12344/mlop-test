@@ -1,9 +1,10 @@
 namespace: mlop-test
+
 postgres:
   replicaCount: 1
   image:
     repository: postgres
-    tag: 16-alpine
+    tag: "16-alpine"
     pullPolicy: IfNotPresent
   service:
     port: 5432
@@ -12,25 +13,28 @@ postgres:
     user: postgres
     password: postgres
     database: postgres
+
 api:
   replicaCount: 1
   image:
-    repository: "ghcr.io/amine12344/mlop-test-api"
+    repository: ghcr.io/amine12344/mlop-test-api
     tag: "sha-6121b5286ca73879a6df16712d7e9df984b2c216"
     pullPolicy: Always
   service:
     port: 8080
   containerPort: 8080
   env:
+    PORT: "8080"
     DB_HOST: postgres
     DB_PORT: "5432"
     DB_NAME: postgres
     DB_USER: postgres
     APP_VERSION: "sha-6121b5286ca73879a6df16712d7e9df984b2c216"
+
 frontend:
   replicaCount: 1
   image:
-    repository: "ghcr.io/amine12344/mlop-test-frontend"
+    repository: ghcr.io/amine12344/mlop-test-frontend
     tag: "sha-6121b5286ca73879a6df16712d7e9df984b2c216"
     pullPolicy: Always
   service:
@@ -38,6 +42,7 @@ frontend:
   containerPort: 80
   env:
     FRONTEND_VERSION: "sha-6121b5286ca73879a6df16712d7e9df984b2c216"
+
 ingress:
   enabled: true
   className: nginx
