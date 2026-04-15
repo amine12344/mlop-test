@@ -1,11 +1,12 @@
 namespaceOverride: mlop-test
-imagePullSecrets: []
+
 api:
   replicaCount: 1
   image:
     repository: ghcr.io/amine12344/mlop-test-api
-    tag: "sha-4c433189f69bd8412cfd736079debcce0bbcb26a"
+    tag: "sha-latest"
     pullPolicy: IfNotPresent
+  containerPort: 8080
   service:
     port: 8080
   env:
@@ -15,34 +16,38 @@ api:
     DB_NAME: mlop
     DB_USER: mlop
     DB_PASSWORD: mlop
-    APP_VERSION: "sha-4c433189f69bd8412cfd736079debcce0bbcb26a"
+    APP_VERSION: "sha-latest"
   probes:
     livenessPath: /healthz
     readinessPath: /readyz
+
 frontend:
   replicaCount: 1
   image:
     repository: ghcr.io/amine12344/mlop-test-frontend
-    tag: "sha-4c433189f69bd8412cfd736079debcce0bbcb26a"
+    tag: "sha-latest"
     pullPolicy: IfNotPresent
+  containerPort: 80
   service:
     port: 80
   env:
-    FRONTEND_VERSION: "sha-4c433189f69bd8412cfd736079debcce0bbcb26a"
+    FRONTEND_VERSION: "sha-latest"
+    API_BASE_URL: "http://api:8080"
+
 postgres:
   replicaCount: 1
   image:
     repository: postgres
     tag: "15"
     pullPolicy: IfNotPresent
+  containerPort: 5432
   service:
     port: 5432
   auth:
     database: mlop
     username: mlop
     password: mlop
-  persistence:
-    enabled: false
+
 ingress:
   enabled: true
   className: nginx

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespaceOverride | default .Release.Namespace }}
 spec:
   replicas: {{ .Values.api.replicaCount }}
   selector:
@@ -18,21 +18,27 @@ spec:
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
           imagePullPolicy: {{ .Values.api.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.api.port }}
-          envFrom:
-            - configMapRef:
-                name: api-config
+            - containerPort: {{ .Values.api.containerPort }}
           env:
+            - name: PORT
+              value: {{ .Values.api.env.PORT | quote }}
+            - name: DB_HOST
+              value: {{ .Values.api.env.DB_HOST | quote }}
+            - name: DB_PORT
+              value: {{ .Values.api.env.DB_PORT | quote }}
+            - name: DB_NAME
+              value: {{ .Values.api.env.DB_NAME | quote }}
+            - name: DB_USER
+              value: {{ .Values.api.env.DB_USER | quote }}
             - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: POSTGRES_PASSWORD
+              value: {{ .Values.api.env.DB_PASSWORD | quote }}
+            - name: APP_VERSION
+              value: {{ .Values.api.env.APP_VERSION | quote }}
           livenessProbe:
             httpGet:
-              path: /healthz
-              port: {{ .Values.api.port }}
+              path: {{ .Values.api.probes.livenessPath }}
+              port: {{ .Values.api.containerPort }}
           readinessProbe:
             httpGet:
-              path: /readyz
-              port: {{ .Values.api.port }}
+              path: {{ .Values.api.probes.readinessPath }}
+              port: {{ .Values.api.containerPort }}
