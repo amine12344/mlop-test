@@ -364,7 +364,44 @@ echo "✅ Reset complete!"
 
 ## 🔨 Jenkins & WSL Setup
 
-### 💻 Step 1: Install Java 21
+### � Alternative: Install Jenkins with Helm
+
+#### Add Jenkins Helm Repository
+
+```bash
+helm repo add jenkins https://charts.jenkins.io
+helm repo update
+```
+
+#### Install Jenkins
+
+```bash
+kubectl create namespace jenkins
+
+helm upgrade --install jenkins jenkins/jenkins \
+  -n jenkins \
+  -f helm/jenkins-values.yaml
+```
+
+#### Get Jenkins Admin Password
+
+```bash
+kubectl exec --namespace jenkins svc/jenkins -c jenkins -- \
+  cat /run/secrets/additional/chart-admin-password && echo
+```
+
+#### Access Jenkins UI
+
+```bash
+# Port forward to access Jenkins
+kubectl port-forward svc/jenkins 8080:80 -n jenkins
+
+# Access at: http://localhost:8080
+```
+
+---
+
+### 💻 WSL-Based Jenkins Agent Setup
 
 ```bash
 sudo apt update
