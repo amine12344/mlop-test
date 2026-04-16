@@ -69,8 +69,8 @@ pipeline {
     stage('Update Helm values') {
       steps {
         sh '''
-          yq -i '.api.image.tag = strenv(VERSION)_withjenkins' helm/mlop-test/values.yaml
-          yq -i '.frontend.image.tag = strenv(VERSION)_withjenkins' helm/mlop-test/values.yaml
+          yq -i '.api.image.tag = strenv(VERSION)+_withjenkins' helm/mlop-test/values.yaml
+          yq -i '.frontend.image.tag = strenv(VERSION)+_withjenkins' helm/mlop-test/values.yaml
         '''
       }
     }
