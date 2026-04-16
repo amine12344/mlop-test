@@ -79,18 +79,22 @@ pipeline {
       steps {
         withCredentials([usernamePassword(credentialsId: 'git-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PAT')]) {
           sh '''
+            set -eux
+
             git config user.name "jenkins"
             git config user.email "jenkins@local"
+
+            git checkout -B ${DEPLOY_BRANCH} origin/${DEPLOY_BRANCH}
 
             git add helm/mlop-test/values.yaml
             git diff --cached --quiet && exit 0
 
             git commit -m "gitops: deploy ${VERSION} [skip ci]"
             git remote set-url origin https://${GIT_USER}:${GIT_PAT}@github.com/amine12344/mlop-test.git
-            git push origin ${DEPLOY_BRANCH}
+            git push origin HEAD:${DEPLOY_BRANCH}
           '''
         }
       }
-    }
+}
   }
 }

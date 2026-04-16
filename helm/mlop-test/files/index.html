@@ -1,70 +1,314 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MLOP Test Lab with argo</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-950 text-white min-h-screen">
-  <main class="mx-auto max-w-5xl px-6 py-10">
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold">MLOP Test Lab</h1>
-      <p class="mt-2 text-slate-400">Frontend → API → PostgreSQL → Argo CD</p>
-    </header>
-
-    <section class="grid gap-6 lg:grid-cols-2">
-      <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-        <h2 class="text-xl font-semibold">Actions</h2>
-        <div class="mt-4 flex flex-wrap gap-3">
-          <button onclick="callApi()" class="rounded-lg bg-sky-500 px-4 py-2 font-semibold text-slate-950">API</button>
-          <button onclick="callDb()" class="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-slate-950">DB</button>
-          <button onclick="loadStatus()" class="rounded-lg bg-amber-500 px-4 py-2 font-semibold text-slate-950">Refresh Status</button>
-          <button onclick="clearOutput()" class="rounded-lg bg-slate-700 px-4 py-2 font-semibold">Clear</button>
-        </div>
-
-        <div class="mt-5">
-          <span class="text-sm text-slate-400">Frontend status</span>
-          <div class="mt-2">
-            <span id="status" class="rounded-full bg-slate-700 px-3 py-1 text-sm font-semibold">Unknown</span>
-          </div>
-        </div>
-
-        <pre id="output" class="mt-5 min-h-[280px] overflow-auto rounded-xl border border-slate-800 bg-black p-4 text-sm text-emerald-400">Click a button...</pre>
-      </div>
-
-      <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-        <h2 class="text-xl font-semibold">/status</h2>
-        <div class="mt-4 grid gap-4 sm:grid-cols-2">
-          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <div class="text-sm text-slate-400">Frontend Version</div>
-            <div id="frontendVersion" class="mt-2 text-lg font-semibold">-</div>
-          </div>
-          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <div class="text-sm text-slate-400">API Version</div>
-            <div id="apiVersion" class="mt-2 text-lg font-semibold">-</div>
-          </div>
-          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <div class="text-sm text-slate-400">API Ready</div>
-            <div id="apiReady" class="mt-2 text-lg font-semibold">-</div>
-          </div>
-          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <div class="text-sm text-slate-400">DB Status</div>
-            <div id="dbStatus" class="mt-2 text-lg font-semibold">-</div>
-          </div>
-        </div>
-
-        <div class="mt-4 rounded-xl border border-slate-800 bg-slate-950 p-4">
-          <div class="text-sm text-slate-400">Last checked</div>
-          <div id="lastChecked" class="mt-2 text-lg font-semibold">-</div>
-        </div>
-      </div>
-    </section>
-  </main>
-
   <script>
     window.__FRONTEND_VERSION__ = "v1.0.0";
   </script>
+  <style>
+    :root {
+      --bg: #081327;
+      --panel: #0d1a33;
+      --panel-2: #071021;
+      --border: #22314d;
+      --text: #f8fafc;
+      --muted: #b8c4d9;
+      --success: #10b981;
+      --blue: #0ea5e9;
+      --green: #10b981;
+      --amber: #f59e0b;
+      --slate: #475569;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1450px;
+      margin: 0 auto;
+      padding: 28px 18px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1.05fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, #0c1830 0%, #0a1630 100%);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+
+    .panel-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 22px;
+    }
+
+    .actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 22px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #081327;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: 0.96;
+    }
+
+    .btn-api { background: var(--blue); }
+    .btn-db { background: var(--green); }
+    .btn-status { background: var(--amber); }
+    .btn-clear { background: #475569; color: #fff; }
+
+    .section-label {
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 800;
+      background: #0f2d1f;
+      color: #ffffff;
+      margin-bottom: 24px;
+    }
+
+    .status-pill.ready {
+      background: var(--success);
+    }
+
+    .status-pill.error {
+      background: #ef4444;
+    }
+
+    pre {
+      margin: 0;
+      padding: 20px;
+      min-height: 470px;
+      max-height: 560px;
+      overflow: auto;
+      border-radius: 22px;
+      background: #02070f;
+      color: #2df8b5;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      font-size: 0.98rem;
+      line-height: 1.5;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: #020b20;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 20px;
+      padding: 22px 20px 18px;
+      min-height: 144px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 10px;
+    }
+
+    .card.wide {
+      grid-column: 1 / -1;
+      min-height: 118px;
+    }
+
+    .card-label {
+      font-size: 0.95rem;
+      color: #d0dbef;
+      font-weight: 500;
+    }
+
+    .card-value {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .version-card .card-value {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 1.05rem;
+      line-height: 1.45;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      margin-top: 2px;
+    }
+
+    .version-main {
+      display: inline-block;
+    }
+
+    .version-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 2px;
+      flex-wrap: wrap;
+    }
+
+    .version-full {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.75rem;
+      color: #8ea1bf;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: #13213d;
+      color: #dbe7fb;
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: fit-content;
+    }
+
+    .copy-btn:hover {
+      background: #1a2d52;
+    }
+
+    .subtle-note {
+      font-size: 0.78rem;
+      color: #8ea1bf;
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      pre {
+        min-height: 360px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        padding: 22px 18px;
+      }
+
+      .panel-title {
+        font-size: 1.7rem;
+      }
+
+      .card {
+        min-height: 128px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="layout">
+      <section class="panel">
+        <h2 class="panel-title">Actions</h2>
+
+        <div class="actions-row">
+          <button class="btn-api" onclick="callApi()">API</button>
+          <button class="btn-db" onclick="callDb()">DB</button>
+          <button class="btn-status" onclick="loadStatus()">Refresh Status</button>
+          <button class="btn-clear" onclick="clearOutput()">Clear</button>
+        </div>
+
+        <div class="section-label">Frontend status</div>
+        <div id="status" class="status-pill">Unknown</div>
+
+        <pre id="output">Click a button...</pre>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">/status</h2>
+
+        <div class="status-grid">
+          <div class="card version-card">
+            <div class="card-label">Frontend Version</div>
+            <div id="frontendVersion" class="card-value" title=""></div>
+            <div class="version-meta">
+              <button class="copy-btn" type="button" onclick="copyVersion('frontendVersion')">Copy</button>
+              <span id="frontendVersionFull" class="version-full"></span>
+            </div>
+          </div>
+
+          <div class="card version-card">
+            <div class="card-label">API Version</div>
+            <div id="apiVersion" class="card-value" title=""></div>
+            <div class="version-meta">
+              <button class="copy-btn" type="button" onclick="copyVersion('apiVersion')">Copy</button>
+              <span id="apiVersionFull" class="version-full"></span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-label">API Ready</div>
+            <div id="apiReady" class="card-value">-</div>
+          </div>
+
+          <div class="card">
+            <div class="card-label">DB Status</div>
+            <div id="dbStatus" class="card-value">-</div>
+          </div>
+
+          <div class="card wide">
+            <div class="card-label">Last checked</div>
+            <div id="lastChecked" class="card-value">-</div>
+            <div class="subtle-note">Hover over a version to see the full value, or use Copy.</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
   <script src="/app.js"></script>
 </body>
 </html>

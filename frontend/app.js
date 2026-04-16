@@ -1,88 +1,154 @@
+const API_BASE = "/api";
+
 function el(id) {
   return document.getElementById(id);
 }
 
-function setStatus(text, colorClass = "bg-slate-700") {
-  const node = el("status");
-  if (!node) return;
-  node.textContent = text;
-  node.className = `rounded-full px-3 py-1 text-sm font-semibold ${colorClass}`;
-}
-
-function setOutput(text) {
-  const node = el("output");
-  if (!node) return;
-  node.textContent = text;
-}
-
 function setText(id, value) {
   const node = el(id);
-  if (!node) return;
-  node.textContent = value;
+  if (node) node.textContent = value;
 }
 
-async function fetchJson(url) {
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" }
-  });
-  const data = await res.json();
-  return { res, data };
+function setHTML(id, value) {
+  const node = el(id);
+  if (node) node.innerHTML = value;
 }
 
-async function requestJson(url, successLabel) {
-  setOutput("Loading...");
-  try {
-    const { res, data } = await fetchJson(url);
-    setOutput(JSON.stringify(data, null, 2));
-    if (res.ok) {
-      setStatus(successLabel, "bg-emerald-600");
-    } else {
-      setStatus("Error", "bg-rose-600");
-    }
-  } catch (err) {
-    setOutput(err.message);
-    setStatus("Failed", "bg-rose-600");
+function shortVersion(version) {
+  if (!version) return "unknown";
+  if (version.startsWith("sha-") && version.length > 18) {
+    return `${version.slice(0, 16)}…`;
+  }
+  return version;
+}
+
+function setVersionCard(id, value) {
+  const displayNode = el(id);
+  const fullNode = el(`${id}Full`);
+  const fullValue = value || "unknown";
+
+  if (displayNode) {
+    displayNode.textContent = shortVersion(fullValue);
+    displayNode.title = fullValue;
+    displayNode.dataset.full = fullValue;
+  }
+
+  if (fullNode) {
+    fullNode.textContent = fullValue;
+    fullNode.title = fullValue;
   }
 }
 
-function callApi() {
-  requestJson("/api/", "API OK");
+async function copyVersion(id) {
+  const node = el(id);
+  if (!node) return;
+
+  const full = node.dataset.full || node.textContent || "";
+  try {
+    await navigator.clipboard.writeText(full);
+    const button = event?.target;
+    if (button) {
+      const original = button.textContent;
+      button.textContent = "Copied";
+      setTimeout(() => {
+        button.textContent = original;
+      }, 1200);
+    }
+  } catch (err) {
+    console.error("Copy failed", err);
+  }
 }
 
-function callDb() {
-  requestJson("/api/db", "DB OK");
+function setStatusPill(value, isOk = true) {
+  const node = el("status");
+  if (!node) return;
+  node.textContent = value;
+  node.classList.remove("ready", "error");
+  node.classList.add(isOk ? "ready" : "error");
+}
+
+function writeOutput(data) {
+  setText("output", JSON.stringify(data, null, 2));
+}
+
+function formatDateTime(date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  }).format(date);
+}
+
+async function fetchJson(path) {
+  const res = await fetch(path);
+  if (!res.ok) {
+    throw new Error(`${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
+async function callApi() {
+  try {
+    const data = await fetchJson(`${API_BASE}/`);
+    writeOutput(data);
+  } catch (err) {
+    writeOutput({ error: err.message });
+  }
+}
+
+async function callDb() {
+  try {
+    const data = await fetchJson(`${API_BASE}/db`);
+    writeOutput(data);
+  } catch (err) {
+    writeOutput({ error: err.message });
+  }
 }
 
 function clearOutput() {
-  setOutput("Click a button...");
-  setStatus("Unknown", "bg-slate-700");
+  setText("output", "Cleared.");
 }
 
 async function loadStatus() {
   try {
     const [root, ready, db] = await Promise.all([
-      fetchJson("/api/"),
-      fetchJson("/api/readyz"),
-      fetchJson("/api/db")
+      fetchJson(`${API_BASE}/`),
+      fetchJson(`${API_BASE}/readyz`),
+      fetchJson(`${API_BASE}/db`)
     ]);
 
-    setText("frontendVersion", window.__FRONTEND_VERSION__ || "unknown");
-    setText("apiVersion", root.data.version || "unknown");
-    setText("apiReady", ready.res.ok ? "ready" : "not-ready");
-    setText("dbStatus", db.res.ok ? "ok" : "error");
-    setText("lastChecked", new Date().toLocaleString());
-
-    setStatus(ready.res.ok ? "Ready" : "Starting", ready.res.ok ? "bg-emerald-600" : "bg-amber-500");
-    setOutput(JSON.stringify({
+    writeOutput({
       api: root.data,
-      ready: ready.data,
-      db: db.data
-    }, null, 2));
+      ready,
+      db
+    });
+
+    setStatusPill("Ready", true);
+    setVersionCard("frontendVersion", window.__FRONTEND_VERSION__ || "unknown");
+    setVersionCard("apiVersion", root?.data?.version || "unknown");
+    setText("apiReady", ready?.status || "unknown");
+    setText("dbStatus", db?.db || "unknown");
+    setText("lastChecked", formatDateTime(new Date()));
   } catch (err) {
-    setStatus("Unavailable", "bg-rose-600");
-    setOutput(err.message);
-    setText("lastChecked", new Date().toLocaleString());
+    setStatusPill("Error", false);
+    setText("output", JSON.stringify({ error: err.message }, null, 2));
+    setVersionCard("frontendVersion", window.__FRONTEND_VERSION__ || "unknown");
+    setVersionCard("apiVersion", "unavailable");
+    setText("apiReady", "unavailable");
+    setText("dbStatus", "unavailable");
+    setText("lastChecked", formatDateTime(new Date()));
   }
 }
 
-document.addEventListener("DOMContentLoaded", loadStatus);
+document.addEventListener("DOMContentLoaded", () => {
+  loadStatus();
+});
+
+window.callApi = callApi;
+window.callDb = callDb;
+window.clearOutput = clearOutput;
+window.loadStatus = loadStatus;
+window.copyVersion = copyVersion;
