@@ -128,7 +128,7 @@ async function loadStatus() {
 
     setStatusPill("Ready", true);
     setVersionCard("frontendVersion", window.__FRONTEND_VERSION__ || "unknown");
-    setVersionCard("apiVersion", root?.data?.version || "unknown");
+    setVersionCard("apiVersion", root?.version || root?.data?.version || "unknown");
     setText("apiReady", ready?.status || "unknown");
     setText("dbStatus", db?.db || "unknown");
     setText("lastChecked", formatDateTime(new Date()));
