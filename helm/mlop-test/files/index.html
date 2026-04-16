@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MLOP Test Lab with argo Power of automation</title>
+  <title>MLOP Test Lab with argo Power of automation - DEMO</title>
   <script>
     window.__FRONTEND_VERSION__ = "v1.0.0";
   </script>
@@ -219,6 +219,26 @@
       color: #8ea1bf;
     }
 
+    .demo-badge {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+      z-index: 1000;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
     @media (max-width: 1100px) {
       .layout {
         grid-template-columns: 1fr;
@@ -249,6 +269,7 @@
   </style>
 </head>
 <body>
+  <div class="demo-badge">🚀 DEMO</div>
   <div class="container">
     <div class="layout">
       <section class="panel">
@@ -261,7 +282,7 @@
           <button class="btn-clear" onclick="clearOutput()">Clear</button>
         </div>
 
-        <div class="section-label">Frontend status test</div>
+        <div class="section-label">Frontend status From argo <span style="color: #f59e0b; font-weight: 600;">(DEMO)</span></div>
         <div id="status" class="status-pill">Unknown</div>
 
         <pre id="output">Click a button...</pre>

@@ -336,6 +336,9 @@ docker system prune -a --volumes -f
 echo "🏗️  Recreating Kind cluster..."
 kind create cluster --config kind-config.yaml
 
+echo "🏗️  Creating ingress namespace..."
+kubectl create ns ingress-nginx
+
 echo "📥 Installing Ingress controller..."
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 
