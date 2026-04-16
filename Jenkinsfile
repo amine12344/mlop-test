@@ -15,18 +15,18 @@ pipeline {
       }
     }
 
-    stage('Skip CI check') {
-      steps {
-        script {
-          def msg = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
-          echo "Last commit message: ${msg}"
-          if (msg.contains('[skip ci]')) {
-            currentBuild.result = 'NOT_BUILT'
-            error('Skipping build because commit message contains [skip ci]')
-          }
-        }
-      }
-    }
+    // stage('Skip CI check') {
+    //   steps {
+    //     script {
+    //       def msg = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
+    //       echo "Last commit message: ${msg}"
+    //       if (msg.contains('[skip ci]')) {
+    //         currentBuild.result = 'NOT_BUILT'
+    //         error('Skipping build because commit message contains [skip ci]')
+    //       }
+    //     }
+    //   }
+    // }
 
     stage('Verify Docker') {
       steps {
@@ -60,8 +60,8 @@ pipeline {
     stage('Push images') {
       steps {
         sh '''
-          docker push ${API_IMAGE}:${VERSION}
-          docker push ${FRONTEND_IMAGE}:${VERSION}
+          docker push ${API_IMAGE}:${VERSION}_withjenkins
+          docker push ${FRONTEND_IMAGE}:${VERSION}_withjenkins
         '''
       }
     }
@@ -74,27 +74,5 @@ pipeline {
         '''
       }
     }
-
-    stage('Commit GitOps change') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'git-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PAT')]) {
-          sh '''
-            set -eux
-
-            git config user.name "jenkins"
-            git config user.email "jenkins@local"
-
-            git checkout -B ${DEPLOY_BRANCH} origin/${DEPLOY_BRANCH}
-
-            git add helm/mlop-test/values.yaml
-            git diff --cached --quiet && exit 0
-
-            git commit -m "gitops: deploy ${VERSION} [skip ci]"
-            git remote set-url origin https://${GIT_USER}:${GIT_PAT}@github.com/amine12344/mlop-test.git
-            git push origin HEAD:${DEPLOY_BRANCH}
-          '''
-        }
-      }
-}
   }
 }
