@@ -41,8 +41,8 @@ pipeline {
       steps {
         sh '''
           set -eux
-          docker build -t ${API_IMAGE}:${VERSION} ./app
-          docker build -t ${FRONTEND_IMAGE}:${VERSION} ./frontend
+          docker build -t ${API_IMAGE}:${VERSION}_withjenkins ./app
+          docker build -t ${FRONTEND_IMAGE}:${VERSION}_withjenkins ./frontend
         '''
       }
     }
