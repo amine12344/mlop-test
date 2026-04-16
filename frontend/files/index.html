@@ -1,70 +1,44 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MLOP Test Lab</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-950 text-white min-h-screen">
-  <main class="mx-auto max-w-5xl px-6 py-10">
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold">MLOP Test Lab</h1>
-      <p class="mt-2 text-slate-400">Frontend → API → PostgreSQL → Argo CD</p>
-    </header>
-
-    <section class="grid gap-6 lg:grid-cols-2">
-      <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-        <h2 class="text-xl font-semibold">Actions</h2>
-        <div class="mt-4 flex flex-wrap gap-3">
-          <button onclick="callApi()" class="rounded-lg bg-sky-500 px-4 py-2 font-semibold text-slate-950">API</button>
-          <button onclick="callDb()" class="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-slate-950">DB</button>
-          <button onclick="loadStatus()" class="rounded-lg bg-amber-500 px-4 py-2 font-semibold text-slate-950">Refresh Status</button>
-          <button onclick="clearOutput()" class="rounded-lg bg-slate-700 px-4 py-2 font-semibold">Clear</button>
-        </div>
-
-        <div class="mt-5">
-          <span class="text-sm text-slate-400">Frontend status</span>
-          <div class="mt-2">
-            <span id="status" class="rounded-full bg-slate-700 px-3 py-1 text-sm font-semibold">Unknown</span>
-          </div>
-        </div>
-
-        <pre id="output" class="mt-5 min-h-[280px] overflow-auto rounded-xl border border-slate-800 bg-black p-4 text-sm text-emerald-400">Click a button...</pre>
-      </div>
-
-      <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-        <h2 class="text-xl font-semibold">/status</h2>
-        <div class="mt-4 grid gap-4 sm:grid-cols-2">
-          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <div class="text-sm text-slate-400">Frontend Version</div>
-            <div id="frontendVersion" class="mt-2 text-lg font-semibold">-</div>
-          </div>
-          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <div class="text-sm text-slate-400">API Version</div>
-            <div id="apiVersion" class="mt-2 text-lg font-semibold">-</div>
-          </div>
-          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <div class="text-sm text-slate-400">API Ready</div>
-            <div id="apiReady" class="mt-2 text-lg font-semibold">-</div>
-          </div>
-          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <div class="text-sm text-slate-400">DB Status</div>
-            <div id="dbStatus" class="mt-2 text-lg font-semibold">-</div>
-          </div>
-        </div>
-
-        <div class="mt-4 rounded-xl border border-slate-800 bg-slate-950 p-4">
-          <div class="text-sm text-slate-400">Last checked</div>
-          <div id="lastChecked" class="mt-2 text-lg font-semibold">-</div>
-        </div>
-      </div>
-    </section>
-  </main>
-
   <script>
     window.__FRONTEND_VERSION__ = "v1.0.0";
   </script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; background: #0f172a; color: #e2e8f0; }
+    button { margin-right: .5rem; padding: .5rem .75rem; }
+    pre { background: #111827; padding: 1rem; border-radius: 8px; overflow: auto; }
+    .badge { display: inline-block; padding: .35rem .6rem; border-radius: 999px; background: #334155; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; max-width: 900px; }
+    .card { background: #1e293b; padding: 1rem; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <h1>MLOP Test Lab</h1>
+  <p>Frontend → API → PostgreSQL → Argo CD</p>
+
+  <div>
+    <button onclick="callApi()">API</button>
+    <button onclick="callDb()">DB</button>
+    <button onclick="loadStatus()">Refresh Status</button>
+    <button onclick="clearOutput()">Clear</button>
+  </div>
+
+  <p>Frontend status: <span id="status" class="badge">Unknown</span></p>
+  <pre id="output">Click a button...</pre>
+
+  <h2>/status</h2>
+  <div class="grid">
+    <div class="card"><strong>Frontend Version</strong><div id="frontendVersion">-</div></div>
+    <div class="card"><strong>API Version</strong><div id="apiVersion">-</div></div>
+    <div class="card"><strong>API Ready</strong><div id="apiReady">-</div></div>
+    <div class="card"><strong>DB Status</strong><div id="dbStatus">-</div></div>
+    <div class="card"><strong>Last checked</strong><div id="lastChecked">-</div></div>
+  </div>
+
   <script src="/app.js"></script>
 </body>
 </html>
