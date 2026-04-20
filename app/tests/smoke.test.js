@@ -1,7 +1,7 @@
 const { spawn } = require("child_process");
 const http = require("http");
 
-const TEST_PORT = 3005;
+const TEST_PORT = 3009;
 
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
