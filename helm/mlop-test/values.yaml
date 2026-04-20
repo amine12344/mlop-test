@@ -16,7 +16,7 @@ api:
   replicaCount: 1
   image:
     repository: ghcr.io/amine12344/mlop-test-api
-    tag: "sha-acda3def5e9b4da9aec90a67d876c04165a4919c"
+    tag: "sha-e82a3564b31dc250ca3112a9e99d37559c19f1cf"
     pullPolicy: Always
   service:
     port: 8080
@@ -27,18 +27,18 @@ api:
     DB_PORT: "5432"
     DB_NAME: postgres
     DB_USER: postgres
-    APP_VERSION: "sha-acda3def5e9b4da9aec90a67d876c04165a4919c"
+    APP_VERSION: "sha-e82a3564b31dc250ca3112a9e99d37559c19f1cf"
 frontend:
   replicaCount: 1
   image:
     repository: ghcr.io/amine12344/mlop-test-frontend
-    tag: "sha-acda3def5e9b4da9aec90a67d876c04165a4919c"
+    tag: "sha-e82a3564b31dc250ca3112a9e99d37559c19f1cf"
     pullPolicy: Always
   service:
     port: 80
   containerPort: 80
   env:
-    FRONTEND_VERSION: "sha-acda3def5e9b4da9aec90a67d876c04165a4919c"
+    FRONTEND_VERSION: "sha-e82a3564b31dc250ca3112a9e99d37559c19f1cf"
 ingress:
   enabled: true
   className: nginx
