@@ -4,7 +4,7 @@
   "main": "app.js",
   "type": "commonjs",
   "scripts": { 
-    "test": "node tests/smoke.test.js" 
+    "test": "node tests/smoke.test.js", 
     "start": "node app.js" 
   },
   "dependencies": { 
