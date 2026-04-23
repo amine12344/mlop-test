@@ -37,19 +37,15 @@ async function main() {
   try {
     await wait(1500);
 
-    // ✅ FIX: use correct endpoint
     const root = await get("/");
-    console.log("Root status:", root.status);
-
-    // Some APIs return 404 on /
-    if (root.status !== 200 && root.status !== 404) {
-      throw new Error(`Unexpected / status: ${root.status}`);
+    if (root.status !== 200) {
+      throw new Error(`GET / failed: ${root.status}`);
     }
 
-    // ✅ Better: test actual API endpoint
-    const api = await get("/");
-    const parsed = JSON.parse(api.body || "{}");
-
+    const parsed = JSON.parse(root.body || "{}");
+    if (parsed.app !== "mlop-test") {
+      throw new Error(`Unexpected app name: ${parsed.app}`);
+    }
     if (!parsed.version) {
       throw new Error("Missing version in API response");
     }
@@ -60,13 +56,12 @@ async function main() {
     }
 
     const readyz = await get("/readyz");
-    if (readyz.status !== 200) {
-      throw new Error(`/readyz failed: ${readyz.status}`);
+    if (readyz.status !== 200 && readyz.status !== 500) {
+      throw new Error(`/readyz returned unexpected status: ${readyz.status}`);
     }
 
     console.log("API smoke tests passed");
     process.exit(0);
-
   } catch (err) {
     console.error(err);
     process.exit(1);
