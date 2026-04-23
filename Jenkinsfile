@@ -1,10 +1,6 @@
 pipeline {
   agent { label 'wsl-docker' }
 
-  options {
-    timestamps()
-  }
-
   environment {
     API_IMAGE = 'ghcr.io/amine12344/mlop-test-api'
     FRONTEND_IMAGE = 'ghcr.io/amine12344/mlop-test-frontend'
