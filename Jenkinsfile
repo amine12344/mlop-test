@@ -90,36 +90,40 @@ pipeline {
         sh '''
           set -eux
 
-          docker network create mlop-test-net || true
-          docker rm -f test-api test-frontend >/dev/null 2>&1 || true
+          set -eux
 
-          docker run -d --name test-api --network mlop-test-net \
-            -e PORT=8080 \
-            -e DB_HOST=postgres \
-            -e DB_PORT=5432 \
-            -e DB_NAME=postgres \
-            -e DB_USER=postgres \
-            -e DB_PASSWORD=postgres \
-            -e APP_VERSION=test-ci \
-            -p 18080:8080 \
-            ${API_IMAGE}:${VERSION}${TAG_SUFFIX}
+      docker network create mlop-test-net || true
+      docker rm -f test-api test-frontend >/dev/null 2>&1 || true
 
-          sleep 4
-          curl -fsS http://localhost:18080/healthz
-          curl -fsS http://localhost:18080/readyz || true
-          curl -fsS http://localhost:18080/ | grep version
+      docker run -d --name test-api --network mlop-test-net --network-alias api \
+        -e PORT=8080 \
+        -e DB_HOST=postgres \
+        -e DB_PORT=5432 \
+        -e DB_NAME=postgres \
+        -e DB_USER=postgres \
+        -e DB_PASSWORD=postgres \
+        -e APP_VERSION=test-ci \
+        -p 18080:8080 \
+        ${API_IMAGE}:${VERSION}${TAG_SUFFIX}
 
-          docker run -d --name test-frontend -p 18081:80 \
-            ${FRONTEND_IMAGE}:${VERSION}${TAG_SUFFIX}
+      sleep 4
+      curl -fsS http://localhost:18080/healthz
+      curl -fsS http://localhost:18080/readyz || true
+      curl -fsS http://localhost:18080/ | grep version
 
-          sleep 3
-          docker ps -a
-          docker logs test-frontend || true
+      docker run -d --name test-frontend --network mlop-test-net \
+        -p 18081:80 \
+        ${FRONTEND_IMAGE}:${VERSION}${TAG_SUFFIX}
 
-          # Minimal validation only: image starts
-          docker inspect test-frontend --format='{{.State.Running}}' | grep true
+      sleep 3
 
-          docker rm -f test-api test-frontend
+      docker ps -a
+      docker logs test-frontend || true
+
+      curl -fsS http://localhost:18081/ >/dev/null
+      curl -fsS http://localhost:18081/app.js | grep 'loadStatus'
+
+      docker rm -f test-api test-frontend
         '''
       }
     }
