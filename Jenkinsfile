@@ -114,7 +114,12 @@ pipeline {
             ${FRONTEND_IMAGE}:${VERSION}${TAG_SUFFIX}
 
           sleep 3
-          curl -fsS http://localhost:18081/ | grep '<title>'
+
+          docker ps -a
+          docker logs test-frontend || true
+
+          curl -v http://localhost:18081/ || true
+          curl -fsS http://localhost:18081/ | grep 'DEMO'
           curl -fsS http://localhost:18081/app.js | grep 'loadStatus'
 
           docker rm -f test-api test-frontend
@@ -152,34 +157,23 @@ pipeline {
         '''
       }
     }
+  }
 
-    stage('Generate HTML Report') {
-      steps {
-        sh '''
-          set -eux
+  post {
+    always {
+      sh '''
+        mkdir -p reports
 
-          mkdir -p reports
-
-          cat > reports/demo-report.html <<EOF
+        cat > reports/demo-report.html <<EOF
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Jenkins Demo Report</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 30px;
-      background: #f8fafc;
-      color: #111827;
-    }
-    h1 {
-      margin-bottom: 6px;
-    }
-    .sub {
-      color: #6b7280;
-      margin-bottom: 24px;
-    }
+    body { font-family: Arial, sans-serif; margin: 30px; background: #f8fafc; color: #111827; }
+    h1 { margin-bottom: 6px; }
+    .sub { color: #6b7280; margin-bottom: 24px; }
     .card {
       background: white;
       border: 1px solid #e5e7eb;
@@ -200,13 +194,6 @@ pipeline {
       border-radius: 6px;
       word-break: break-all;
     }
-    ul {
-      margin-top: 8px;
-    }
-    .ok {
-      color: #065f46;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
@@ -219,41 +206,22 @@ pipeline {
     <div><span class="label">Version Tag:</span> <code>${VERSION}${TAG_SUFFIX}</code></div>
     <div><span class="label">Build Number:</span> <code>${BUILD_NUMBER}</code></div>
     <div><span class="label">Build URL:</span> <code>${BUILD_URL}</code></div>
+    <div><span class="label">Build Result:</span> <code>${currentBuild.currentResult}</code></div>
   </div>
 
   <div class="card">
     <div><span class="label">API Image:</span> <code>${API_IMAGE}:${VERSION}${TAG_SUFFIX}</code></div>
     <div><span class="label">Frontend Image:</span> <code>${FRONTEND_IMAGE}:${VERSION}${TAG_SUFFIX}</code></div>
   </div>
-
-  <div class="card">
-    <div class="label">Checks Executed:</div>
-    <ul>
-      <li class="ok">API Smoke Tests</li>
-      <li class="ok">Frontend Static Tests</li>
-      <li class="ok">Helm Validation</li>
-      <li class="ok">Container Smoke Tests</li>
-      <li class="ok">Docker Build</li>
-      <li class="ok">GHCR Push</li>
-      <li class="ok">Helm Values Update</li>
-    </ul>
-  </div>
 </body>
 </html>
 EOF
-        '''
-      }
-    }
-  }
 
-  post {
-    always {
-      sh '''
         docker rm -f test-api test-frontend >/dev/null 2>&1 || true
       '''
       archiveArtifacts artifacts: 'reports/*', fingerprint: true
       publishHTML(target: [
-        allowMissing: false,
+        allowMissing: true,
         alwaysLinkToLastBuild: true,
         keepAll: true,
         reportDir: 'reports',
