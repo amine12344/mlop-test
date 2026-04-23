@@ -18,7 +18,7 @@ spec:
           image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
           imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.postgres.port }}
+            - containerPort: {{ .Values.postgres.containerPort }}
           env:
             - name: POSTGRES_USER
               valueFrom:

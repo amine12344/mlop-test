@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: api
   namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
 spec:
   replicas: {{ .Values.api.replicaCount }}
   selector:
@@ -18,7 +20,7 @@ spec:
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
           imagePullPolicy: {{ .Values.api.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.api.port }}
+            - containerPort: {{ .Values.api.containerPort }}
           envFrom:
             - configMapRef:
                 name: api-config
@@ -31,12 +33,8 @@ spec:
           livenessProbe:
             httpGet:
               path: /healthz
-              port: {{ .Values.api.port }}
-            initialDelaySeconds: 10
-            periodSeconds: 10
+              port: {{ .Values.api.containerPort }}
           readinessProbe:
             httpGet:
               path: /readyz
-              port: {{ .Values.api.port }}
-            initialDelaySeconds: 5
-            periodSeconds: 5
+              port: {{ .Values.api.containerPort }}

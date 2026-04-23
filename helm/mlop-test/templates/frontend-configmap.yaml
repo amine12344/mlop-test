@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: {{ .Values.namespace }}
+data:
+  FRONTEND_VERSION: {{ .Values.frontend.env.FRONTEND_VERSION | quote }}

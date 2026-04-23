@@ -1,0 +1,88 @@
+name: Branch GitOps CI/CD
+
+on:
+  push:
+    branches:
+      - feature/test-argo
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-update-gitops:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+
+    env:
+      API_IMAGE: ghcr.io/${{ github.repository_owner }}/mlop-test-api
+      FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/mlop-test-frontend
+      VERSION: sha-${{ github.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Validate Docker builds
+        run: |
+          docker build -t local-api:${VERSION} ./app
+          docker build -t local-frontend:${VERSION} ./frontend
+
+      - name: Validate Helm chart
+        run: |
+          helm lint helm/mlop-test
+          helm template mlop-test helm/mlop-test -n mlop-test >/tmp/rendered.yaml
+          test -s /tmp/rendered.yaml
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:${{ env.VERSION }}
+            ${{ env.API_IMAGE }}:latest
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ env.VERSION }}
+            ${{ env.FRONTEND_IMAGE }}:latest
+
+      - name: Install yq
+        run: sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && sudo chmod +x /usr/local/bin/yq
+
+      - name: Update Helm values
+        run: |
+          yq -i '.api.image.repository = strenv(API_IMAGE)' helm/mlop-test/values.yaml
+          yq -i '.api.image.tag = strenv(VERSION)' helm/mlop-test/values.yaml
+          yq -i '.api.env.APP_VERSION = strenv(VERSION)' helm/mlop-test/values.yaml
+
+          yq -i '.frontend.image.repository = strenv(FRONTEND_IMAGE)' helm/mlop-test/values.yaml
+          yq -i '.frontend.image.tag = strenv(VERSION)' helm/mlop-test/values.yaml
+          yq -i '.frontend.env.FRONTEND_VERSION = strenv(VERSION)' helm/mlop-test/values.yaml
+
+      - name: Commit updated Helm values
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add helm/mlop-test/values.yaml
+          git diff --cached --quiet && exit 0
+          git commit -m "gitops: deploy ${VERSION} [skip ci]"
+          git push origin HEAD:feature/test-argo
