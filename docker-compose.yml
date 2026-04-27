@@ -2,28 +2,58 @@ services:
   proxy:
     image: nginx:alpine
     ports:
-      - 8080:80
+      - "8081:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
     depends_on:
       - api
     networks:
       - frontend
       - backend
-  
+
   api:
     build: ./app
     environment:
-      PORT: 8080
+      PORT: 8084
       DB_HOST: db
       DB_USER: postgres
+      DB_PASSWORD: postgres
       DB_NAME: postgres
       DB_PORT: 5432
+      INFERENCE_URL: http://inference:8001
+      APP_VERSION: local-dev
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      inference:
+        condition: service_started
+    networks:
+      - backend
+
+  inference:
+    build: ./ml/serving
+    environment:
+      MODEL_NAME: iris-classifier
+      MODEL_STAGE: None
+      MLFLOW_TRACKING_URI: file:///mlruns
+    volumes:
+      - ./shared/mlruns:/mlruns
     networks:
       - backend
   
+  trainer:
+    build:
+      context: ./ml/training
+    environment:
+      MLFLOW_TRACKING_URI: file:///mlruns
+    volumes:
+      - ./shared/mlruns:/mlruns
+    profiles:
+      - training
+    networks:
+      - backend
+
   db:
     image: postgres:16-alpine
     environment:
@@ -33,14 +63,14 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-shell", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 3s
       retries: 10
-  
+
 networks:
   frontend: {}
   backend: {}
-  
+
 volumes:
   pgdata: {}

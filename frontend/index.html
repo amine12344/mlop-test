@@ -281,7 +281,11 @@
           <button class="btn-status" onclick="loadStatus()">Refresh Status</button>
           <button class="btn-clear" onclick="clearOutput()">Clear</button>
         </div>
-
+        <div class="prediction-panel">
+          <label for="predictValue">Prediction value</label>
+          <input id="predictValue" type="number" step="0.1" value="3.5" />
+          <button onclick="callPredict()">Predict</button>
+        </div>
         <div class="section-label">Frontend status From argo <span style="color: #f59e0b; font-weight: 600;">(DEMO)</span></div>
         <div id="status" class="status-pill">Unknown</div>
 
