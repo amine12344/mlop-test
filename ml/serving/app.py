@@ -18,10 +18,12 @@ model = None
 
 
 class PredictRequest(BaseModel):
-    value: float
+    sepal_length: float = 5.1
+    sepal_width: float = 3.5
+    petal_length: float = 1.4
+    petal_width: float = 0.2
     entity_id: Optional[str] = None
     metadata: Dict[str, Any] = {}
-
 
 def load_model():
     global model
@@ -55,8 +57,14 @@ def healthz():
 def predict(req: PredictRequest):
     start = time.time()
 
-    # Model expects 2D array
-    prediction = model.predict([[req.value]])
+    features = [[
+        req.sepal_length,
+        req.sepal_width,
+        req.petal_length,
+        req.petal_width,
+    ]]
+
+    prediction = model.predict(features)
 
     latency = round((time.time() - start) * 1000, 3)
 
@@ -64,4 +72,6 @@ def predict(req: PredictRequest):
         "prediction": int(prediction[0]),
         "latency_ms": latency,
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "model_name": MODEL_NAME,
+        "model_stage": MODEL_STAGE,
     }

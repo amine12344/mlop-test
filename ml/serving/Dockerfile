@@ -9,6 +9,6 @@ COPY app.py .
 
 ENV MLFLOW_TRACKING_URI=file:/mlruns
 
-EXPOSE 8002
+EXPOSE 8001
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8002"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8001"]

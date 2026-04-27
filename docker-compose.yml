@@ -34,9 +34,23 @@ services:
   inference:
     build: ./ml/serving
     environment:
-      MODEL_NAME: rule-based-demo-model
-      MODEL_VERSION: v0
-      APP_VERSION: local-dev
+      MODEL_NAME: iris-classifier
+      MODEL_STAGE: None
+      MLFLOW_TRACKING_URI: file:///mlruns
+    volumes:
+      - ./shared/mlruns:/mlruns
+    networks:
+      - backend
+  
+  trainer:
+    build:
+      context: ./ml/training
+    environment:
+      MLFLOW_TRACKING_URI: file:///mlruns
+    volumes:
+      - ./shared/mlruns:/mlruns
+    profiles:
+      - training
     networks:
       - backend
 
