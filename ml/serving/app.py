@@ -1,94 +1,67 @@
-import hashlib
 import os
 import time
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, Request
-from pydantic import BaseModel, Field
+import mlflow.pyfunc
+from fastapi import FastAPI
+from pydantic import BaseModel
 
 
-SERVICE_NAME = "mlop-test-inference"
-MODEL_NAME = os.getenv("MODEL_NAME", "rule-based-demo-model")
-MODEL_VERSION = os.getenv("MODEL_VERSION", "v0")
-APP_VERSION = os.getenv("APP_VERSION", "dev")
+MODEL_NAME = os.getenv("MODEL_NAME", "iris-classifier")
+MODEL_STAGE = os.getenv("MODEL_STAGE", "None")  # None = latest version
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "file:/mlruns")
 
+app = FastAPI()
 
-app = FastAPI(
-    title="MLOP Test Inference Service",
-    version=APP_VERSION,
-)
+model = None
 
 
 class PredictRequest(BaseModel):
-    value: float = Field(..., description="Numeric feature used for demo prediction")
-    entity_id: Optional[str] = Field(default=None, description="Optional entity id")
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    value: float
+    entity_id: Optional[str] = None
+    metadata: Dict[str, Any] = {}
 
 
-class PredictResponse(BaseModel):
-    service: str
-    model_name: str
-    model_version: str
-    prediction: int
-    score: float
-    request_id: str
-    latency_ms: float
-    timestamp: str
+def load_model():
+    global model
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+
+    if MODEL_STAGE.lower() == "none":
+        model_uri = f"models:/{MODEL_NAME}/latest"
+    else:
+        model_uri = f"models:/{MODEL_NAME}/{MODEL_STAGE}"
+
+    print(f"Loading model from: {model_uri}")
+    model = mlflow.pyfunc.load_model(model_uri)
 
 
-def make_request_id(payload: Dict[str, Any]) -> str:
-    raw = repr(sorted(payload.items())).encode("utf-8")
-    return hashlib.sha256(raw).hexdigest()[:16]
-
-
-def score_value(value: float) -> float:
-    # Simple deterministic baseline for early labs.
-    # Later this function will call a real MLflow-loaded model.
-    return round(value * 0.5, 6)
+@app.on_event("startup")
+def startup():
+    load_model()
 
 
 @app.get("/healthz")
 def healthz():
     return {
         "status": "ok",
-        "service": SERVICE_NAME,
+        "model_loaded": model is not None,
         "model_name": MODEL_NAME,
-        "model_version": MODEL_VERSION,
-        "app_version": APP_VERSION,
+        "stage": MODEL_STAGE,
     }
 
 
-@app.get("/readyz")
-def readyz():
+@app.post("/predict")
+def predict(req: PredictRequest):
+    start = time.time()
+
+    # Model expects 2D array
+    prediction = model.predict([[req.value]])
+
+    latency = round((time.time() - start) * 1000, 3)
+
     return {
-        "status": "ready",
-        "checks": {
-            "model_loaded": True,
-            "kafka_configured": bool(os.getenv("KAFKA_BOOTSTRAP_SERVERS")),
-        },
+        "prediction": int(prediction[0]),
+        "latency_ms": latency,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
-
-
-@app.post("/predict", response_model=PredictResponse)
-async def predict(payload: PredictRequest, request: Request):
-    start = time.perf_counter()
-
-    body = payload.model_dump()
-    request_id = request.headers.get("x-request-id") or make_request_id(body)
-
-    score = score_value(payload.value)
-    prediction = 1 if score >= 1.0 else 0
-
-    latency_ms = round((time.perf_counter() - start) * 1000, 3)
-
-    return PredictResponse(
-        service=SERVICE_NAME,
-        model_name=MODEL_NAME,
-        model_version=MODEL_VERSION,
-        prediction=prediction,
-        score=score,
-        request_id=request_id,
-        latency_ms=latency_ms,
-        timestamp=datetime.now(timezone.utc).isoformat(),
-    )
