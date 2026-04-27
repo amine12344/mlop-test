@@ -1,3 +1,51 @@
 manifests/
 app/node_modules
 jenkins-agent/*
+# =========================
+# Python environments
+# =========================
+.venv/*
+.venv-kfp/*
+venv/*
+env/*
+ENV/*
+
+# =========================
+# Python cache
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# MLflow artifacts
+# =========================
+mlruns/*
+mlartifacts/*
+shared/mlruns/*
+
+# =========================
+# Training outputs
+# =========================
+ml/training/artifacts/*
+ml/training/output/*
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# =========================
+# Docker / temp
+# =========================
+*.pid
+*.sock
