@@ -5,6 +5,7 @@ jenkins-agent/*
 # Python environments
 # =========================
 .venv/*
+.venv-kfp/*
 venv/*
 env/*
 ENV/*

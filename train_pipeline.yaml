@@ -1,0 +1,29 @@
+# PIPELINE DEFINITION
+# Name: mlop-test-train-pipeline
+components:
+  comp-train-model:
+    executorLabel: exec-train-model
+deploymentSpec:
+  executors:
+    exec-train-model:
+      container:
+        args:
+        - MLFLOW_TRACKING_URI=file:///mlruns python train.py --register-model
+        command:
+        - sh
+        - -c
+        image: mlop-test-trainer:latest
+pipelineInfo:
+  name: mlop-test-train-pipeline
+root:
+  dag:
+    tasks:
+      train-model:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-train-model
+        taskInfo:
+          name: train-model
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.7.0
