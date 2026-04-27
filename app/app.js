@@ -3,7 +3,7 @@ const os = require("os");
 const { Client } = require("pg");
 
 const app = express();
-const port = Number(process.env.PORT || 8085);
+const port = Number(process.env.PORT || 8084);
 
 app.use(express.json({ limit: "1mb" }));
 

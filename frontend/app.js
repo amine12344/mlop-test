@@ -143,6 +143,44 @@ async function loadStatus() {
   }
 }
 
+async function callPredict() {
+  try {
+    const valueInput = el("predictValue");
+    const value = Number(valueInput?.value || 3.5);
+
+    const res = await fetch("/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        value,
+        entity_id: "frontend-demo-user",
+        metadata: {
+          source: "frontend"
+        }
+      })
+    });
+
+    const text = await res.text();
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { error: text };
+    }
+
+    if (!res.ok) {
+      throw new Error(JSON.stringify(data));
+    }
+
+    writeOutput(data);
+  } catch (err) {
+    writeOutput({ error: err.message });
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   loadStatus();
 });
@@ -152,3 +190,4 @@ window.callDb = callDb;
 window.clearOutput = clearOutput;
 window.loadStatus = loadStatus;
 window.copyVersion = copyVersion;
+window.callPredict = callPredict;
