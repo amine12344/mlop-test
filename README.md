@@ -516,6 +516,26 @@ Learn more about the technologies used in this project:
 
 ---
 
+---
+
+## MLOps Starter: API + Inference Boundary
+
+This branch starts the MLOps evolution of the repository.
+
+The local Docker Compose stack now demonstrates the first production-style ML serving boundary:
+
+```text
+Browser / API Client
+  ↓
+nginx reverse proxy
+  ↓
+Node.js API Gateway
+  ↓
+FastAPI Inference Service
+  ↓
+Prediction Response
+```
+
 ## 🤝 Contributing
 
 Found an issue or want to improve something? Feel free to submit feedback!
